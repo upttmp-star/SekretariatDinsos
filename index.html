@@ -191,7 +191,7 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;'
 function host(u){ try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u} }
 function toast(msg,type){ const t=$('toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',2800) }
 // === ISI DENGAN URL WEB APP APPS SCRIPT ANDA (berakhiran /exec) ===
-const API_URL = 'PASTE_URL_WEB_APP_DI_SINI';
+const API_URL = 'https://sekredinsoscirebon.web.id/';
 
 function run(fn,...args){
   // Mode 1: dibuka langsung dari Apps Script
