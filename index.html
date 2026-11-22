@@ -4,7 +4,7 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portal Tautan</title>
+<title>Sekre Dinsos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -190,8 +190,27 @@ function sessionStorageSet(k,v){ try{ v==null?sessionStorage.removeItem(k):sessi
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
 function host(u){ try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u} }
 function toast(msg,type){ const t=$('toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',2800) }
+// === ISI DENGAN URL WEB APP APPS SCRIPT ANDA (berakhiran /exec) ===
+const API_URL = 'PASTE_URL_WEB_APP_DI_SINI';
+
 function run(fn,...args){
-  return new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error((e&&e.message||String(e)).replace(/^Error:\s*/,'')))) [fn](...args));
+  // Mode 1: dibuka langsung dari Apps Script
+  if(window.google && google.script && google.script.run){
+    return new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error((e&&e.message||String(e)).replace(/^Error:\s*/,'')))) [fn](...args));
+  }
+  // Mode 2: di-hosting di domain sendiri -> panggil API Apps Script
+  if(!API_URL || API_URL.indexOf('PASTE_')===0) return Promise.reject(new Error('API_URL belum diisi di Index.html'));
+  const body = fn==='getLinks' ? {action:fn}
+    : fn==='adminLogin' ? {action:fn,password:args[0]}
+    : fn==='adminSave' ? {action:fn,token:args[0],data:args[1]}
+    : {action:fn,token:args[0],id:args[1]};
+  return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(r=>r.json())
+    .then(r=>{
+      if(fn==='adminLogin') return r;
+      if(r.ok===false) throw new Error(r.message||'Terjadi kesalahan');
+      return r.data;
+    });
 }
 function logoHtml(d,cls){
   const src = d.logo || ('https://www.google.com/s2/favicons?sz=128&domain='+encodeURIComponent(host(d.link)));
