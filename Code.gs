@@ -14,11 +14,42 @@ const SHEET_NAME = 'Links';
 const LOGO_FOLDER_NAME = 'Logo Portal Tautan';
 const HEADERS = ['ID', 'Judul', 'Link', 'Logo', 'Dibuat'];
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Portal Tautan')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === 'getLinks') {
+    try { return json_({ ok: true, data: getLinks() }); }
+    catch (err) { return json_({ ok: false, message: err.message }); }
+  }
+  // Jika file "Index" ada di proyek ini, tampilkan halamannya (mode Apps Script murni)
+  try {
+    return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('Portal Tautan')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (err) {
+    return json_({ ok: true, message: 'API Portal Tautan aktif.' });
+  }
+}
+
+// API untuk halaman yang di-hosting di domain sendiri
+function doPost(e) {
+  try {
+    const b = JSON.parse(e.postData.contents);
+    switch (b.action) {
+      case 'getLinks':    return json_({ ok: true, data: getLinks() });
+      case 'adminLogin':  return json_(adminLogin(b.password));
+      case 'adminSave':   return json_({ ok: true, data: adminSave(b.token, b.data) });
+      case 'adminDelete': return json_({ ok: true, data: adminDelete(b.token, b.id) });
+      default:            return json_({ ok: false, message: 'Aksi tidak dikenal.' });
+    }
+  } catch (err) {
+    return json_({ ok: false, message: err.message });
+  }
 }
 
 /* ---------- Helper ---------- */
